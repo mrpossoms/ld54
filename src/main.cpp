@@ -1,5 +1,7 @@
 #include "g.h"
 #include "renderer.hpp"
+#include "controls.hpp"
+
 #include "state.hpp"
 
 namespace ld54
@@ -23,11 +25,14 @@ struct Game : public g::core
 	{
 		state.world.heightmap = assets.tex("heightmap.png");
 
+		state.player.camera.position[1] = state.world.height(state.player.camera.position) + 1.f;
+
 		return true;
 	}
 
 	virtual void update(float dt)
 	{
+		controls(state, dt);
 		renderer.draw(state);
 	}
 

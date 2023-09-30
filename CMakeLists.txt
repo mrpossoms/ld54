@@ -73,15 +73,20 @@ message(">>>openal: ${OPENAL_LIBRARY}")
 
 if (WIN32)
 message(STATUS ">>> Will copy data directory")
+# add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+#                    COMMAND cmake -E copy_directory
+#                    ${CMAKE_SOURCE_DIR}/data
+#                    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
+#                   )
+# add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+#                    COMMAND cmake -E copy_directory
+#                    ${CMAKE_SOURCE_DIR}/data
+#                    ${CMAKE_BINARY_DIR}/data
+#                   )
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-                   COMMAND cmake -E copy_directory
+                   COMMAND cmake -E create_symlink
                    ${CMAKE_SOURCE_DIR}/data
                    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
-                  )
-add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-                   COMMAND cmake -E copy_directory
-                   ${CMAKE_SOURCE_DIR}/data
-                   ${CMAKE_BINARY_DIR}/data
                   )
 else ()
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD

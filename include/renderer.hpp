@@ -4,6 +4,7 @@
 #include "state.hpp"
 
 using namespace xmath;
+using namespace g::gfx;
 
 namespace ld54
 {
@@ -16,7 +17,7 @@ struct Renderer
 
 private:
 	g::asset::store& assets;
-    g::gfx::mesh<g::gfx::vertex::pos_uv_norm> terrain;
+    mesh<vertex::pos_norm_tan> terrain;
 };
 
 } // namespace ld54
