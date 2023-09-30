@@ -3,6 +3,8 @@
 using namespace ld54;
 using namespace g::gfx;
 
+
+
 void Renderer::draw(State& state)
 {
 	glClearColor(0.5, 0.5, 1.0, 1.0);
@@ -10,6 +12,12 @@ void Renderer::draw(State& state)
 
 	if (!terrain.is_initialized())
 	{
-		terrain = g::gfx::mesh<vertex::pos_uv_norm>::from_heightmap(state.world.heightmap);
+		terrain = g::gfx::mesh_factory::from_heightmap(state.world.heightmap);
 	}
+
+	terrain.using_shader(assets.shader("terrain.vs+terrain.fs"))
+	.set_camera(state.player.camera)
+	["u_model"].mat4(mat<4,4>::I())
+	.draw<GL_TRIANGLES>();
+
 }

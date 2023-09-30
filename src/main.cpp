@@ -1,4 +1,5 @@
 #include "g.h"
+#include "renderer.hpp"
 #include "state.hpp"
 
 namespace ld54
@@ -9,20 +10,25 @@ struct Game : public g::core
 
 	g::asset::store assets;
 	State state;
+	Renderer renderer;
 
-	Game() = default;
+	Game() : renderer(assets)
+	{
+
+	}
+
 	~Game() = default;
 
 	virtual bool initialize()
 	{
-		assets.tex("heightmap.png");
+		state.world.heightmap = assets.tex("heightmap.png");
 
 		return true;
 	}
 
 	virtual void update(float dt)
 	{
-
+		renderer.draw(state);
 	}
 
 };
