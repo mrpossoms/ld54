@@ -1,27 +1,33 @@
 #include "g.h"
 #include "state.hpp"
 
-struct my_game : public g::core
+namespace ld54
+{
+
+struct Game : public g::core
 {
 
 	g::asset::store assets;
-	game::state state;
+	State state;
 
-	my_game() = default;
-	~my_game() = default;
+	Game() = default;
+	~Game() = default;
 
 	virtual bool initialize()
 	{
+		assets.tex("heightmap.png");
+
 		return true;
 	}
 
 	virtual void update(float dt)
 	{
-		glClearColor(0.5, 0.5, 1.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	}
 
 };
+
+}
 
 #ifdef __EMSCRIPTEN__
 EM_JS(int, canvas_get_width, (), {
@@ -35,11 +41,11 @@ EM_JS(int, canvas_get_height, (), {
 
 int main (int argc, const char* argv[])
 {
-	my_game game;
+	ld54::Game game;
 
 	g::core::opts opts;
 
-	opts.name = "my game";
+	opts.name = "ld54";
 	opts.gfx.fullscreen = false;
 
 #ifdef __EMSCRIPTEN__

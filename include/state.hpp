@@ -1,13 +1,22 @@
 #pragma once
 
 using namespace xmath;
+#include <g.gfx.h>
 
-namespace game
+using namespace g::gfx;
+
+namespace ld54
 {
 
-struct state
+struct State
 {
+	struct {
+		g::gfx::texture heightmap;
+	} world;
 
+	struct {
+		g::game::camera_perspective camera;
+	} player;
 };
 
-} // namespace game
+} // namespace ld54
