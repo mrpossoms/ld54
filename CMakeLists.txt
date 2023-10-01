@@ -55,6 +55,7 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 set(SOURCE ${SOURCE} 
   src/main.cpp
   src/renderer.cpp
+  src/car.cpp
 )
 
 # add game includes

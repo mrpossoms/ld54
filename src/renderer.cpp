@@ -111,14 +111,14 @@ void Renderer::draw(State& state)
 		glDisable(GL_DEPTH_TEST);
 		for (unsigned i = 0; i < 4; i++)
 		{
-			g::gfx::debug::print(state.player.camera).color({i < 2 ? 1 : 0.75f, 0, 0, 1}).point(car.wheels[i].pos);
+			g::gfx::debug::print(state.player.camera).color({i < 2 ? 1 : 0.75f, 0, 0, 1}).point(car.wheels[i]->pos);
 			if (i < 2)
 			{
-				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i].pos, steer_forward);
+				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, steer_forward);
 			}
 			else
 			{
-				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i].pos, forward);
+				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, forward);
 			}
 		}
 

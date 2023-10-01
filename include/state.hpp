@@ -1,12 +1,9 @@
 #pragma once
 
-using namespace xmath;
 #include <g.gfx.h>
 #include <algorithm>
 
-#include "btBulletDynamicsCommon.h"
-#include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
-
+using namespace xmath;
 using namespace g::gfx;
 
 namespace ld54
@@ -24,81 +21,29 @@ struct State
 			float nominal_distances[4];
 		};
 
-		Wheel wheels[4];
+		struct Node
+		{
+			vec<3> pos;
+			vec<3> vel;
+		};
+
+		Node nodes[4];
+		float distances[4][4] = {};
 		float steer_angle = 0;
+		
+		std::vector<Node*> wheels;
 
-		Car(const vec<3>& pos)
-		{
-			for (unsigned i = 0; i < 4; i++)
-			{
-				float t = M_PI/4 + (M_PI / 2) * i;
-				wheels[i].pos = pos + vec<3>{std::cos(t), 0, std::sin(t)};
-				wheels[i].forward = vec<3>{0, 0, 1};
-			}
-
-			for (unsigned i = 0; i < 4; i++)
-			{
-				for (unsigned j = 0; j < 4; j++)
-				{
-					if (i == j) continue;
-
-					auto d = wheels[i].pos - wheels[j].pos;
-					wheels[i].nominal_distances[j] = d.magnitude();
-				}
-			}
-		}
-
-		vec<3> position()
-		{
-			return (wheels[0].pos + wheels[1].pos + wheels[2].pos + wheels[3].pos) * 0.25f;
-		}
-
-		vec<3> steer_forward()
-		{
-			return quat<>::from_axis_angle(up(), steer_angle).rotate(forward());
-		}
-
-		vec<3> forward()
-		{
-			return (((wheels[0].pos + wheels[1].pos) * 0.5f) - ((wheels[2].pos + wheels[3].pos) * 0.5f)).unit();
-		}
-
-		vec<3> right()
-		{
-			return vec<3>::cross({0, 1, 0}, forward());
-		}
-
-		vec<3> up()
-		{
-			return vec<3>::cross(forward(), right());
-		}
-
-		vec<3> velocity()
-		{
-			return (wheels[0].vel + wheels[1].vel + wheels[2].vel + wheels[3].vel) * 0.25f;
-		}
-
-		void accelerate(float amount)
-		{
-			for (unsigned i = 2; i < 4; i++)
-			{
-				wheels[i].vel += forward() * amount;
-			}
-		}
-
-		void steer(float amount)
-		{
-			steer_angle += amount;
-
-			steer_angle = std::max<float>(-M_PI/4.f, std::min<float>(M_PI/4.f, steer_angle));
-
-			auto f = forward();
-			for (unsigned i = 0; i < 2; i++)
-			{
-				wheels[i].forward = vec<3>{std::cosf(steer_angle), 0, std::sinf(steer_angle)};
-			}
-		}
-
+		Car(const vec<3>& pos);
+		Car(const Car& o);
+		void step(State& state, float dt);
+		vec<3> position();
+		vec<3> steer_forward();
+		vec<3> forward();
+		vec<3> right();
+		vec<3> up();
+		vec<3> velocity();
+		void accelerate(float amount);
+		void steer(float amount);
 	};
 
 	struct {
