@@ -78,6 +78,11 @@ void controls(State& state, float dt)
 		car.wheels[3].vel += car.wheels[1].forward * 10.f * dt;
 	}
 
+	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		car.wheels[2].vel += car.wheels[0].forward * -10.f * dt;
+		car.wheels[3].vel += car.wheels[1].forward * -10.f * dt;
+	}
 }
 
 } // namespace ld54

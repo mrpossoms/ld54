@@ -8,7 +8,7 @@ namespace ld54
 {
 	struct Physics
 	{
-		vec<3> gravity = {0, -0.81f, 0};
+		vec<3> gravity = {0, -9.81f, 0};
 
 		Physics()
 		{
@@ -20,12 +20,12 @@ namespace ld54
 
 		void step_car(State& state, State::Car& car, float dt)
 		{
-			auto sub_steps = 1;
+			auto sub_steps = 10;
 			auto sub_dt = dt / sub_steps;
 
 			for (unsigned i = 0; i < 4; i++)
 			{
-				car.wheels[i].vel += gravity * sub_dt;
+				car.wheels[i].vel += gravity * dt;
 
 				auto z = state.world.height(car.wheels[i].pos);
 
@@ -51,11 +51,14 @@ namespace ld54
 
 						auto force = (dist - car.wheels[i].nominal_distances[j]); // * 1000.f;
 
-						car.wheels[i].vel += dir * force * sub_dt;
+						car.wheels[i].vel += dir * force;// * sub_dt;
 					}
+				}
 
+				for (unsigned i = 0; i < 4; i++)
+				{
 					car.wheels[i].pos += car.wheels[i].vel * sub_dt;
-				}				
+				}
 			}
 
 		}
