@@ -3,6 +3,7 @@
 #include "controls.hpp"
 
 #include "state.hpp"
+#include "physics.hpp"
 
 namespace ld54
 {
@@ -13,6 +14,7 @@ struct Game : public g::core
 	g::asset::store assets;
 	State state;
 	Renderer renderer;
+	Physics physics;
 
 	Game() : renderer(assets)
 	{
@@ -27,12 +29,16 @@ struct Game : public g::core
 
 		state.player.camera.position[1] = state.world.height(state.player.camera.position) + 1.f;
 
+		state.world.cars.push_back(State::Car(state.player.camera.position + vec<3>{0, 100, 0}));
+
+		glPointSize(10.f);
 		return true;
 	}
 
 	virtual void update(float dt)
 	{
 		controls(state, dt);
+		physics.step(state, dt);
 		renderer.draw(state);
 	}
 

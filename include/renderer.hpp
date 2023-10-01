@@ -17,6 +17,8 @@ struct Renderer
 
 private:
 	g::asset::store& assets;
+	float terrain_height_min = 10000;
+	float terrain_height_max = -10000;
     mesh<vertex::pos_norm_tan> terrain;
 };
 

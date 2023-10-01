@@ -45,6 +45,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_SILENCE_DEPRECATION")
 
 add_subdirectory(gitman_sources/g.h)
+add_subdirectory(gitman_sources/bullet3)
+
+INCLUDE_DIRECTORIES(
+${BULLET_PHYSICS_SOURCE_DIR}/src
+)
 
 # add all source files
 set(SOURCE ${SOURCE} 
@@ -69,6 +74,9 @@ add_executable(${PROJECT_NAME} ${SOURCE})
 target_link_libraries(${PROJECT_NAME} g)
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
+target_link_libraries(${PROJECT_NAME}
+ BulletDynamics BulletCollision LinearMath
+)
 message(">>>openal: ${OPENAL_LIBRARY}")
 
 if (WIN32)

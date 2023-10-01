@@ -34,13 +34,13 @@ void setup_camera(State& state, g::game::fps_camera& cam)
 	    xlast = xpos; ylast = ypos;
 
 	    auto speed = cam.speed;
-	    speed *= cam.touching_surface ? 1 : 0.1;
 	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) speed *= (cam.touching_surface ? 5 : 1);
 	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_W) == GLFW_PRESS) cam.velocity += cam.body_forward() * speed;
 	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_S) == GLFW_PRESS) cam.velocity += cam.body_forward() * -speed;
 	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_A) == GLFW_PRESS) cam.velocity += cam.body_left() * speed;
 	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_D) == GLFW_PRESS) cam.velocity += cam.body_left() * -speed;
-	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_SPACE) == GLFW_PRESS) cam.velocity += cam.body_up() * 5 * cam.touching_surface;
+	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_SPACE) == GLFW_PRESS) cam.velocity += cam.body_up() * speed;
+	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) cam.velocity += cam.body_up() * -speed;
 	    if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetInputMode(g::gfx::GLFW_WIN, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	    if (glfwGetMouseButton(g::gfx::GLFW_WIN, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -64,9 +64,20 @@ void controls(State& state, float dt)
     // process input and update the velocities.
     cam.pre_update(dt, 0);
     cam.aspect_ratio(g::gfx::aspect());
+    cam.velocity -= (cam.velocity * dt);
 
     // after velocities have been corrected, update the camera's position
     cam.update(dt, 0);
+
+	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetInputMode(g::gfx::GLFW_WIN, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	auto& car = state.world.cars[0];
+	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		car.wheels[2].vel += car.wheels[0].forward * 10.f * dt;
+		car.wheels[3].vel += car.wheels[1].forward * 10.f * dt;
+	}
+
 }
 
 } // namespace ld54

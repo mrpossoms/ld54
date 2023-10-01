@@ -30,6 +30,32 @@ vec<3> normal_from_heightmap(const texture& tex, vec<2, int> pixel)
 	return (x_normal + y_normal) / (x_samples + y_samples);
 }
 
+int tex_min(const texture& tex)
+{
+	int min = tex.sample(0, 0)[0];
+	for (int y = 0; y < tex.size[1]; y++)
+	{
+		for (int x = 0; x < tex.size[0]; x++)
+		{
+			min = std::min(min, (int)tex.sample(x, y)[0]);
+		}
+	}
+	return min;
+}
+
+int tex_max(const texture& tex)
+{
+	int max = tex.sample(0, 0)[0];
+	for (int y = 0; y < tex.size[1]; y++)
+	{
+		for (int x = 0; x < tex.size[0]; x++)
+		{
+			max = std::max(max, (int)tex.sample(x, y)[0]);
+		}
+	}
+	return max;
+}
+
 void Renderer::draw(State& state)
 {
 	glClearColor(0.5, 0.5, 1.0, 1.0);
@@ -37,17 +63,26 @@ void Renderer::draw(State& state)
 
 	if (!terrain.is_initialized())
 	{
+		// float heightScaling = (14. / 256.);
+		terrain_height_min = tex_min(state.world.heightmap); // * heightScaling;
+		terrain_height_max = tex_max(state.world.heightmap); // * heightScaling;
+		auto hm_zero = (terrain_height_max + terrain_height_min) * 0.5f;
+
+		float debug_max = -10000;
+		float debug_min = 10000;
+
+		auto terrain_min = vec<3>{0, 0, 0};
+		auto terrain_max = vec<3>{(float)state.world.heightmap.size[0], 0, (float)state.world.heightmap.size[1]};
+		auto terrain_center = (terrain_min + terrain_max) * 0.5f;
+
 		terrain = mesh_factory::from_heightmap<vertex::pos_norm_tan>(state.world.heightmap,
 			[&](const texture& tex, int x, int y) -> vertex::pos_norm_tan {
-
-
+				auto height = state.world.height({(float)x, 0, (float)y}, true);
+				debug_max = std::max(debug_max, height);
+				debug_min = std::min(debug_min, height);
 				return {
 					// position
-					{
-						x - tex.size[0] * 0.5f,
-						static_cast<float>(tex.sample(x, y)[0] * 0.25f),
-						y - tex.size[1] * 0.5f,
-					},
+					vec<3>{ (float)x, (float)height, (float)y} - terrain_center,
 					// normal
 					normal_from_heightmap(state.world.heightmap, {x, y}),
 					// tangent
@@ -55,11 +90,26 @@ void Renderer::draw(State& state)
 				};
 			}
 		);
+
+		std::cout << "heightmap extreams: " << debug_min << ", " << debug_max << std::endl;
 	}
 
 	terrain.using_shader(assets.shader("planet.vs+terrain.fs") )
 	.set_camera(state.player.camera)
-	["u_model"].mat4(mat<4,4>::I())
+	["u_model"].mat4(mat<4,4>::translation({0, 0, 0}))
 	.draw<GL_TRIANGLES>();
 
+	for (State::Car& car : state.world.cars)
+	{
+		// assets.geo("truck_0/body.obj").using_shader(assets.shader("object.vs+object.fs"))
+		// .set_camera(state.player.camera)
+		// ["u_model"].mat4(mat<4,4>::translation(car.position()))
+		// .draw<GL_TRIANGLES>();
+
+		for (unsigned i = 0; i < 4; i++)
+		{
+			g::gfx::debug::print(state.player.camera).color({i < 2 ? 1 : 0.75f, 0, 0, 1}).point(car.wheels[i].pos);
+			g::gfx::debug::print(state.player.camera).color({0, 1, 0, 1}).ray(car.wheels[i].pos, car.wheels[i].forward);
+		}
+	}
 }
