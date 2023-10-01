@@ -72,16 +72,28 @@ void controls(State& state, float dt)
 	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetInputMode(g::gfx::GLFW_WIN, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	auto& car = state.world.cars[0];
+	auto forward = car.forward();
 	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		car.wheels[2].vel += car.wheels[0].forward * 10.f * dt;
-		car.wheels[3].vel += car.wheels[1].forward * 10.f * dt;
+		car.accelerate(30.f * dt);
 	}
 
 	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		car.wheels[2].vel += car.wheels[0].forward * -10.f * dt;
-		car.wheels[3].vel += car.wheels[1].forward * -10.f * dt;
+		car.accelerate(-30.f * dt);
+	}
+
+	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		car.steer(3.f * dt);
+	}
+	else if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		car.steer(-3.f * dt);
+	}
+	else
+	{
+		car.steer(-car.steer_angle * 3.f * dt);
 	}
 }
 

@@ -20,23 +20,44 @@ namespace ld54
 
 		void step_car(State& state, State::Car& car, float dt)
 		{
-			auto sub_steps = 10;
+			auto sub_steps = 100;
 			auto sub_dt = dt / sub_steps;
 
+			auto steer_vec = car.steer_forward();
+			auto forward = car.forward();
 			for (unsigned i = 0; i < 4; i++)
 			{
-				car.wheels[i].vel += gravity * dt;
+				auto& wheel = car.wheels[i];
+				auto z = state.world.height(wheel.pos);
 
-				auto z = state.world.height(car.wheels[i].pos);
-
-				if (z > car.wheels[i].pos[1])
+				auto dz = z - wheel.pos[1];
+				if (dz > 0)
 				{
-					car.wheels[i].pos[1] = z;
-					car.wheels[i].vel[1] = 0;
+					wheel.pos[1] = z;
+					wheel.vel[1] = 0;
+					// wheel.vel += vec<3>{0, dz, 0} * dt;
 				}
+				else
+				{
+					wheel.vel += gravity * dt;
+				}
+
+				if (i < 2)
+				{ // front wheels
+					float steer_power = steer_vec.dot(car.right()) * wheel.vel.dot(forward);
+					wheel.vel += car.right() * steer_power * dt;
+				}
+				
+				// skid friction
+				auto skid = wheel.vel.dot(car.right());
+				wheel.vel -= car.right() * skid * 4.0f * dt;
+
+				// rolling resistance
+				auto rolling = wheel.vel.dot(forward);
+				wheel.vel -= forward * rolling * 0.5f * dt;
 			}
 
-
+			// apply constraint solving between wheels in sub steps
 			for (unsigned step = 0; step < sub_steps; step++)
 			{
 				for (unsigned i = 0; i < 4; i++)
@@ -49,9 +70,10 @@ namespace ld54
 						auto dist = d.magnitude();
 						auto dir = d.unit();
 
-						auto force = (dist - car.wheels[i].nominal_distances[j]); // * 1000.f;
+						auto force = (dist - car.wheels[i].nominal_distances[j]);
 
-						car.wheels[i].vel += dir * force;// * sub_dt;
+						car.wheels[i].vel += dir * force;
+						// car.wheels[i].pos += dir * force * 0.5f * sub_dt;
 					}
 				}
 

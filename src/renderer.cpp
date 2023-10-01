@@ -106,10 +106,23 @@ void Renderer::draw(State& state)
 		// ["u_model"].mat4(mat<4,4>::translation(car.position()))
 		// .draw<GL_TRIANGLES>();
 
+		auto forward = car.forward();
+		auto steer_forward = car.steer_forward();
+		glDisable(GL_DEPTH_TEST);
 		for (unsigned i = 0; i < 4; i++)
 		{
 			g::gfx::debug::print(state.player.camera).color({i < 2 ? 1 : 0.75f, 0, 0, 1}).point(car.wheels[i].pos);
-			g::gfx::debug::print(state.player.camera).color({0, 1, 0, 1}).ray(car.wheels[i].pos, car.wheels[i].forward);
+			if (i < 2)
+			{
+				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i].pos, steer_forward);
+			}
+			else
+			{
+				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i].pos, forward);
+			}
 		}
+
+		g::gfx::debug::print(state.player.camera).color({0, 0, 1, 1}).ray(car.position(), car.up());
+		glEnable(GL_DEPTH_TEST);
 	}
 }

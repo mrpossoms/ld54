@@ -29,7 +29,7 @@ struct Game : public g::core
 
 		state.player.camera.position[1] = state.world.height(state.player.camera.position) + 1.f;
 
-		state.world.cars.push_back(State::Car(state.player.camera.position + vec<3>{0, 100, 0}));
+		state.world.cars.push_back(State::Car(state.player.camera.position + vec<3>{0, 10, 0}));
 
 		glPointSize(10.f);
 		return true;
@@ -38,6 +38,21 @@ struct Game : public g::core
 	virtual void update(float dt)
 	{
 		controls(state, dt);
+
+		auto& car = state.world.cars[0];
+		auto& cam = state.player.camera;
+		auto cam_pos_targ = car.position() + car.forward() * -10 + car.up() * 4;
+		cam.position += (cam_pos_targ - cam.position) * 10 * dt;
+		auto cam_forward = (car.position()-cam.position).unit();
+		auto cam_up = vec<3>::cross(cam_forward, car.right()).unit();
+		// cam.look_at(cam.position, -cam_forward, cam_up);
+		cam.look_at(car.position());
+		// auto car_pos_proj = car.position().project_onto_plane({0, 1, 0});
+		// auto cam_pos_proj = cam.position.project_onto_plane({0, 1, 0});
+		// cam.orientation = quat<>::from_axis_angle({0, 1, 0}, -car_pos_proj.angle_to(cam_pos_proj));
+
+		// cam.orientation = 
+
 		physics.step(state, dt);
 		renderer.draw(state);
 	}
