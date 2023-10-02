@@ -30,7 +30,7 @@ struct State
 		std::vector<Node> nodes;
 		std::vector<std::vector<float>> distances;
 		float steer_angle = 0;
-		
+		float odometer = 0;
 		std::vector<Node*> wheels;
 
 		Car(const vec<3>& pos);
@@ -75,7 +75,7 @@ struct State
 			auto h_1 = h_01 * (1 - dx) + h_11 * dx;
 			auto h = h_0 * (1 - dy) + h_1 * dy;
 
-			return h * 0.25f;
+			return h * 0.125f;
 		}
 
 		std::vector<Car> cars;

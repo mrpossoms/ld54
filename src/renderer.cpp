@@ -136,14 +136,14 @@ void Renderer::draw(State& state)
 			{
 				assets.geo("truck_0/tire.obj").using_shader(assets.shader("object.vs+object.fs"))
 				.set_camera(state.player.camera)
-				["u_model"].mat4(mat<4, 4>::translation(car.wheels[i]->pos + car.up() * 0.33f) * R.transpose() * mat<4, 4>::rotation(car.up(), -car.steer_angle))
+				["u_model"].mat4(mat<4, 4>::translation(car.wheels[i]->pos + car.up() * 0.33f) * R.transpose() * mat<4, 4>::rotation(car.up(), -car.steer_angle) * mat<4, 4>::rotation({1, 0, 0}, -car.odometer))
 				.draw<GL_TRIANGLES>();
 			}
 			else
 			{
 				assets.geo("truck_0/tire.obj").using_shader(assets.shader("object.vs+object.fs"))
 				.set_camera(state.player.camera)
-				["u_model"].mat4(mat<4, 4>::translation(car.wheels[i]->pos + car.up() * 0.33f) * R.transpose())
+				["u_model"].mat4(mat<4, 4>::translation(car.wheels[i]->pos + car.up() * 0.33f) * R.transpose() * mat<4, 4>::rotation({1, 0, 0}, -car.odometer))
 				.draw<GL_TRIANGLES>();				
 			}
 

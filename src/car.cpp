@@ -5,10 +5,10 @@ using namespace ld54;
 State::Car::Car(const vec<3>& pos)
 {
 	vec<3> wheel_pattern[] = {
-		{1.0f, 0, 1.5f},
-		{-1.0f, 0, 1.5f},
-		{1.0f, 0, -1.5f},
-		{-1.0f, 0, -1.5f},
+		{1.1f, 0, 1.5f},
+		{-1.1f, 0, 1.5f},
+		{1.1f, 0, -1.5f},
+		{-1.1f, 0, -1.5f},
 	};
 
 	for (unsigned i = 0; i < 4; i++)
@@ -25,8 +25,10 @@ State::Car::Car(const vec<3>& pos)
 		wheels.push_back(node);
 	}
 
-	nodes.push_back({pos + vec<3>{0.f, 1.5f, 1.5f}});
-	nodes.push_back({pos + vec<3>{0.f, 1.5f, -1.5f}});
+	nodes.push_back({pos + vec<3>{-0.5f, 1.5f, 1.5f}});
+	nodes.push_back({pos + vec<3>{-0.5f, 1.5f, -1.5f}});
+	nodes.push_back({pos + vec<3>{0.5f, 1.5f, 1.5f}});
+	nodes.push_back({pos + vec<3>{0.5f, 1.5f, -1.5f}});
 
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
@@ -66,6 +68,7 @@ void State::Car::step(State& state, float dt)
 
 	auto steer_vec = steer_forward();
 	auto fwd = forward();
+	bool wheel_near_ground = false;
 	for (unsigned i = 0; i < wheels.size(); i++)
 	{
 		auto& wheel = *wheels[i];
@@ -82,7 +85,14 @@ void State::Car::step(State& state, float dt)
 		// rolling resistance
 		auto rolling = wheel.vel.dot(fwd);
 		wheel.vel -= fwd * rolling * 0.5f * dt;
+
+		if (wheel.pos[1] < state.world.height(wheel.pos))
+		{
+			wheel_near_ground = true;
+		}
 	}
+
+	odometer += fwd.dot(velocity()) * 2.5 * dt;
 
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
@@ -194,6 +204,8 @@ void State::Car::accelerate(float amount)
 	{
 		wheels[i]->vel += forward() * amount;
 	}
+
+	odometer += amount;
 }
 
 void State::Car::steer(float amount)
