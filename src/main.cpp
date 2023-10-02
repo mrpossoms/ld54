@@ -29,7 +29,7 @@ struct Game : public g::core
 
 		state.player.camera.position[1] = state.world.height(state.player.camera.position) + 1.f;
 
-		state.world.cars.push_back(State::Car(state.player.camera.position + vec<3>{0, 10, 0}));
+		state.world.cars.push_back(State::Car(state.player.camera.position + vec<3>{0, 50, 0}));
 
 		glPointSize(10.f);
 		return true;
@@ -42,6 +42,12 @@ struct Game : public g::core
 		auto& car = state.world.cars[0];
 		auto& cam = state.player.camera;
 		auto cam_pos_targ = car.position() + car.forward() * -10 + car.up() * 4;
+
+		if (cam_pos_targ[1] < state.world.height(cam_pos_targ))
+		{
+			cam_pos_targ[1] = state.world.height(cam_pos_targ) + 1;
+		}
+
 		cam.position += (cam_pos_targ - cam.position) * 10 * dt;
 		auto cam_forward = (car.position()-cam.position).unit();
 		auto cam_up = vec<3>::cross(cam_forward, car.right()).unit();

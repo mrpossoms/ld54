@@ -108,10 +108,21 @@ void Renderer::draw(State& state)
 
 		auto forward = car.forward();
 		auto steer_forward = car.steer_forward();
-		glDisable(GL_DEPTH_TEST);
+
+		for (unsigned i = 0; i < car.nodes.size(); i++)
+		{
+			g::gfx::debug::print(state.player.camera).color({1, 0, 0, 1}).point(car.nodes[i].pos);
+		}
+
+		auto R = car.orientation();
+
+		assets.geo("truck_0/body.obj").using_shader(assets.shader("object.vs+object.fs"))
+		.set_camera(state.player.camera)
+		["u_model"].mat4(mat<4, 4>::translation(car.position() + car.up() * 0.25f) * R.transpose() * mat<4, 4>::rotation({0, 1, 0}, M_PI))
+		.draw<GL_TRIANGLES>();	
+
 		for (unsigned i = 0; i < 4; i++)
 		{
-			g::gfx::debug::print(state.player.camera).color({i < 2 ? 1 : 0.75f, 0, 0, 1}).point(car.wheels[i]->pos);
 			if (i < 2)
 			{
 				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, steer_forward);
@@ -120,9 +131,24 @@ void Renderer::draw(State& state)
 			{
 				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, forward);
 			}
+
+			if (i < 2)
+			{
+				assets.geo("truck_0/tire.obj").using_shader(assets.shader("object.vs+object.fs"))
+				.set_camera(state.player.camera)
+				["u_model"].mat4(mat<4, 4>::translation(car.wheels[i]->pos + car.up() * 0.33f) * R.transpose() * mat<4, 4>::rotation(car.up(), -car.steer_angle))
+				.draw<GL_TRIANGLES>();
+			}
+			else
+			{
+				assets.geo("truck_0/tire.obj").using_shader(assets.shader("object.vs+object.fs"))
+				.set_camera(state.player.camera)
+				["u_model"].mat4(mat<4, 4>::translation(car.wheels[i]->pos + car.up() * 0.33f) * R.transpose())
+				.draw<GL_TRIANGLES>();				
+			}
+
 		}
 
 		g::gfx::debug::print(state.player.camera).color({0, 0, 1, 1}).ray(car.position(), car.up());
-		glEnable(GL_DEPTH_TEST);
 	}
 }

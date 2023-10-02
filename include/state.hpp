@@ -27,8 +27,8 @@ struct State
 			vec<3> vel;
 		};
 
-		Node nodes[4];
-		float distances[4][4] = {};
+		std::vector<Node> nodes;
+		std::vector<std::vector<float>> distances;
 		float steer_angle = 0;
 		
 		std::vector<Node*> wheels;
@@ -42,6 +42,7 @@ struct State
 		vec<3> right();
 		vec<3> up();
 		vec<3> velocity();
+		mat<4, 4> orientation();
 		void accelerate(float amount);
 		void steer(float amount);
 	};

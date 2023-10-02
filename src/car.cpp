@@ -4,34 +4,53 @@ using namespace ld54;
 
 State::Car::Car(const vec<3>& pos)
 {
-	auto node_count = sizeof(nodes) / sizeof(nodes[0]);
-	for (unsigned i = 0; i < node_count; i++)
+	vec<3> wheel_pattern[] = {
+		{1.0f, 0, 1.5f},
+		{-1.0f, 0, 1.5f},
+		{1.0f, 0, -1.5f},
+		{-1.0f, 0, -1.5f},
+	};
+
+	for (unsigned i = 0; i < 4; i++)
 	{
 		float t = M_PI/4 + (M_PI / 2) * i;
-		nodes[i].pos = pos + vec<3>{std::cos(t), 0, std::sin(t)};
-		// nodes[i].forward = vec<3>{0, 0, 1};
+		Node n = {
+			pos + wheel_pattern[i],
+			{},
+		};
 
-		Node* node = &nodes[i];
+		nodes.push_back(n);
+
+		Node* node = &nodes.back();
 		wheels.push_back(node);
 	}
 
-	for (unsigned i = 0; i < node_count; i++)
-	{
-		for (unsigned j = 0; j < node_count; j++)
-		{
-			if (i == j) continue;
+	nodes.push_back({pos + vec<3>{0.f, 1.5f, 1.5f}});
+	nodes.push_back({pos + vec<3>{0.f, 1.5f, -1.5f}});
 
-			auto d = nodes[i].pos - nodes[j].pos;
-			distances[i][j] = d.magnitude();
+	for (unsigned i = 0; i < nodes.size(); i++)
+	{
+		distances.push_back(std::vector<float>());
+
+		for (unsigned j = 0; j < nodes.size(); j++)
+		{
+			float dist = 0;
+			if (i != j)
+			{
+				auto d = nodes[i].pos - nodes[j].pos;
+				dist = d.magnitude();			
+			}
+
+			distances[i].push_back(dist);
 		}
 	}
 }
 
 State::Car::Car(const Car& o)
 {
-	memcpy(nodes, o.nodes, sizeof(nodes));
-	memcpy(distances, o.distances, sizeof(distances));
-
+	nodes = o.nodes;
+	distances = o.distances;
+	
 	for (unsigned i = 0; i < 4; i++)
 	{
 		wheels.push_back(&nodes[i]);
@@ -50,20 +69,6 @@ void State::Car::step(State& state, float dt)
 	for (unsigned i = 0; i < wheels.size(); i++)
 	{
 		auto& wheel = *wheels[i];
-		auto z = state.world.height(wheel.pos);
-
-		auto dz = z - wheel.pos[1];
-		if (dz > 0)
-		{
-			wheel.pos[1] = z;
-			wheel.vel[1] = 0;
-			// wheel.vel += vec<3>{0, dz, 0} * dt;
-		}
-		else
-		{
-			wheel.vel += gravity * dt;
-		}
-
 		if (i < 2)
 		{ // front wheels
 			float steer_power = steer_vec.dot(right()) * wheel.vel.dot(fwd);
@@ -79,12 +84,29 @@ void State::Car::step(State& state, float dt)
 		wheel.vel -= fwd * rolling * 0.5f * dt;
 	}
 
+	for (unsigned i = 0; i < nodes.size(); i++)
+	{
+		auto& node = nodes[i];
+		auto z = state.world.height(node.pos);
+		auto dz = z - node.pos[1];
+		if (dz > 0)
+		{
+			node.pos[1] = z;
+			node.vel[1] = 0;
+			// node.vel += vec<3>{0, dz, 0} * dt;
+		}
+		else
+		{
+			node.vel += gravity * dt;
+		}
+	}
+
 	// apply constraint solving between wheels in sub steps
 	for (unsigned step = 0; step < sub_steps; step++)
 	{
-		for (unsigned i = 0; i < wheels.size(); i++)
+		for (unsigned i = 0; i < nodes.size(); i++)
 		{
-			for (unsigned j = 0; j < wheels.size(); j++)
+			for (unsigned j = 0; j < nodes.size(); j++)
 			{
 				if (i == j) continue;
 
@@ -100,7 +122,7 @@ void State::Car::step(State& state, float dt)
 
 		}
 
-		for (unsigned i = 0; i < wheels.size(); i++)
+		for (unsigned i = 0; i < nodes.size(); i++)
 		{
 			nodes[i].pos += nodes[i].vel * sub_dt;
 		}
@@ -111,13 +133,12 @@ void State::Car::step(State& state, float dt)
 vec<3> State::Car::position()
 {
 	vec<3> net_pos;
-	auto node_count = sizeof(nodes) / sizeof(nodes[0]);
-	for (unsigned i = 0; i < node_count; i++)
+	for (unsigned i = 0; i < nodes.size(); i++)
 	{
 		net_pos += nodes[i].pos;
 	}
 
-	return net_pos / (float)node_count;
+	return net_pos / (float)nodes.size();
 }
 
 vec<3> State::Car::steer_forward()
@@ -143,13 +164,28 @@ vec<3> State::Car::up()
 vec<3> State::Car::velocity()
 {
 	vec<3> net_vel;
-	auto node_count = sizeof(nodes) / sizeof(nodes[0]);
-	for (unsigned i = 0; i < node_count; i++)
+	for (unsigned i = 0; i < nodes.size(); i++)
 	{
 		net_vel += nodes[i].vel;
 	}
 
-	return net_vel / (float)node_count;	
+	return net_vel / (float)nodes.size();	
+}
+
+mat<4, 4> State::Car::orientation()
+{
+	auto r = right();
+	auto u = up();
+	auto f = forward();
+
+	mat<4, 4> R = {
+		{r[0], r[1], r[2], 0},
+		{u[0], u[1], u[2], 0},
+		{f[0], f[1], f[2], 0},
+		{0,    0,    0,    1}
+	};
+
+	return R;
 }
 
 void State::Car::accelerate(float amount)
