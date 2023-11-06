@@ -49,13 +49,13 @@ static inline void project_constraint(const Constraint& c, const Node* n0, const
 
 	vec<3> dp[2] = {
 		dir * (w[0] / w0_w1) * -(dist - c.distance),
-		// dir * (w[1] / w0_w1) * (dist - c.distance),
+		dir * (w[1] / w0_w1) * (dist - c.distance),
 	};
 
 	auto k_prime = 1.f - powf((1.f - c.stiffness), 1 / (float)iterations);
 
 	est_p0 += dp[0] * k_prime;
-	// est_p1 += dp[1];
+	est_p1 += dp[1] * k_prime;
 }
 
 void physics::pbd::Solver::step(float dt, std::function<vec<3> (const vec<3>& p)> force_field)

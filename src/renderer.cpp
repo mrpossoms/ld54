@@ -109,11 +109,6 @@ void Renderer::draw(State& state)
 		auto forward = car.forward();
 		auto steer_forward = car.steer_forward();
 
-		for (unsigned i = 0; i < car.nodes.size(); i++)
-		{
-			g::gfx::debug::print(state.player.camera).color({1, 0, 0, 1}).point(car.nodes[i].pos);
-		}
-
 		auto R = car.orientation();
 
 		assets.geo("truck_0/body.obj").using_shader(assets.shader("object.vs+object.fs"))
@@ -123,15 +118,6 @@ void Renderer::draw(State& state)
 
 		for (unsigned i = 0; i < 4; i++)
 		{
-			if (i < 2)
-			{
-				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, steer_forward);
-			}
-			else
-			{
-				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, forward);
-			}
-
 			if (i < 2)
 			{
 				assets.geo("truck_0/tire.obj").using_shader(assets.shader("object.vs+object.fs"))
@@ -147,8 +133,24 @@ void Renderer::draw(State& state)
 				.draw<GL_TRIANGLES>();				
 			}
 
+			glDisable(GL_DEPTH_TEST);
+			if (i < 2)
+			{
+				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, steer_forward);
+			}
+			else
+			{
+				g::gfx::debug::print(state.player.camera).color({1, 0, 1, 1}).ray(car.wheels[i]->pos, forward);
+			}
+			g::gfx::debug::print(state.player.camera).color({0, 0, 1, 1}).ray(car.position(), car.up());
+			glEnable(GL_DEPTH_TEST);
 		}
 
-		g::gfx::debug::print(state.player.camera).color({0, 0, 1, 1}).ray(car.position(), car.up());
+		glDisable(GL_DEPTH_TEST);
+		for (unsigned i = 0; i < car.nodes.size(); i++)
+		{
+			g::gfx::debug::print(state.player.camera).color({1, 0, 0, 1}).point(car.nodes[i].pos);
+		}
+		glEnable(GL_DEPTH_TEST);
 	}
 }

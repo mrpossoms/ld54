@@ -2,6 +2,18 @@
 
 using namespace ld54;
 
+static unsigned pair_id(unsigned i, unsigned j)
+{
+	if (i < j)
+	{
+		return i * j + j;
+	}
+	else
+	{
+		return j * i + i;
+	}
+}
+
 State::Car::Car(const vec<3>& pos, float mass)
 {
 	vec<3> wheel_pattern[] = {
@@ -26,38 +38,41 @@ State::Car::Car(const vec<3>& pos, float mass)
 		wheels.push_back(node);
 	}
 
-	nodes.push_back({pos + vec<3>{-0.5f, 1.5f, 1.5f}});
-	nodes.push_back({pos + vec<3>{-0.5f, 1.5f, -1.5f}});
-	nodes.push_back({pos + vec<3>{0.5f, 1.5f, 1.5f}});
-	nodes.push_back({pos + vec<3>{0.5f, 1.5f, -1.5f}});
+	nodes.push_back({pos + vec<3>{-0.5f, 1.5f, 1.35f}});
+	nodes.push_back({pos + vec<3>{-0.5f, 1.5f, -1.35f}});
+	nodes.push_back({pos + vec<3>{0.5f, 1.5f, 1.35f}});
+	nodes.push_back({pos + vec<3>{0.5f, 1.5f, -1.35f}});
+
+	std::set<unsigned> pairs;
 
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
-		// distances.push_back(std::vector<float>());
-
 		for (unsigned j = 0; j < nodes.size(); j++)
 		{
 			float dist = 0;
-			if (i != j)
+			auto id = pair_id(i, j);
+			if (i != j && pairs.find(id) == pairs.end())
 			{
 				auto d = nodes[i].pos - nodes[j].pos;
 				dist = d.magnitude();
 
-				float stiffness = 1.f;
+				float stiffness = 1.0f;
 
-				if (i < 4 || j < 4)
+				if ((i < 4) && (j >= 4) || (i >= 4) && (j < 4))
 				{
-					stiffness = 0.5f;
+					stiffness = 0.05f;
 				}
 				
 				constraints.push_back({
-					dist, // distance
-					stiffness, // stiffness
+					dist,
+					stiffness,
 					{
 						{ i, this },
 						{ j, this },
 					}
 				});
+
+				pairs.insert(id);
 			}
 
 			// distances[i].push_back(dist);

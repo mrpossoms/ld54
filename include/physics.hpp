@@ -37,7 +37,7 @@ struct Mesh
 
 struct Solver
 {
-	Solver(unsigned solver_steps=10);
+	Solver(unsigned solver_steps=1);
 
 	void add_meshes(const std::initializer_list<Mesh*>& meshes);
 	void add_constraints(const std::initializer_list<Constraint>& constraint);
