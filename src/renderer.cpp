@@ -147,6 +147,12 @@ void Renderer::draw(State& state)
 		}
 
 		glDisable(GL_DEPTH_TEST);
+		for (unsigned i = 0; i < car.constraints.size(); i++)
+		{
+			auto& c = car.constraints[i];
+			g::gfx::debug::print(state.player.camera).color({0, 1, 0, 1}).line(car.nodes[c.v[0].idx].pos, car.nodes[c.v[1].idx].pos);
+		}
+
 		for (unsigned i = 0; i < car.nodes.size(); i++)
 		{
 			g::gfx::debug::print(state.player.camera).color({1, 0, 0, 1}).point(car.nodes[i].pos);

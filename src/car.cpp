@@ -43,6 +43,12 @@ State::Car::Car(const vec<3>& pos, float mass)
 	nodes.push_back({pos + vec<3>{0.5f, 1.5f, 1.35f}});
 	nodes.push_back({pos + vec<3>{0.5f, 1.5f, -1.35f}});
 
+
+	// nodes.push_back({pos + vec<3>{-0.5f, 1.0f, 1.35f}});
+	// nodes.push_back({pos + vec<3>{-0.5f, 1.0f, -1.35f}});
+	// nodes.push_back({pos + vec<3>{0.5f, 1.0f, 1.35f}});
+	// nodes.push_back({pos + vec<3>{0.5f, 1.0f, -1.35f}});
+
 	std::set<unsigned> pairs;
 
 	for (unsigned i = 0; i < nodes.size(); i++)
@@ -58,9 +64,9 @@ State::Car::Car(const vec<3>& pos, float mass)
 
 				float stiffness = 1.0f;
 
-				if ((i < 4) && (j >= 4) || (i >= 4) && (j < 4))
+				if ((i < 4 && j >= 4) || (i >= 4 && j < 4))
 				{
-					stiffness = 0.05f;
+					stiffness = 0.2f;
 				}
 				
 				constraints.push_back({
