@@ -14,7 +14,6 @@ struct Game : public g::core
 	g::asset::store assets;
 	State state;
 	Renderer renderer;
-	Physics physics;
 
 	Game() : renderer(assets)
 	{
@@ -59,7 +58,11 @@ struct Game : public g::core
 
 		// cam.orientation = 
 
-		physics.step(state, dt);
+		for (auto& car : state.world.cars)
+		{
+			car.step(state, dt);
+		}
+
 		renderer.draw(state);
 	}
 

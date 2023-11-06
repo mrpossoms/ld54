@@ -3,6 +3,8 @@
 #include <g.gfx.h>
 #include <algorithm>
 
+#include "physics.hpp"
+
 using namespace xmath;
 using namespace g::gfx;
 
@@ -11,29 +13,24 @@ namespace ld54
 
 struct State
 {
-	struct Car
+	struct Car : public ld54::physics::pbd::Mesh
 	{
-		struct Wheel
-		{
-			vec<3> pos;
-			vec<3> vel = {};
-			vec<3> forward = {};
-			float nominal_distances[4];
-		};
 
-		struct Node
-		{
-			vec<3> pos;
-			vec<3> vel;
-		};
+		// struct Node
+		// {
+		// 	vec<3> pos;
+		// 	vec<3> est_pos;
+		// 	vec<3> vel;
+		// 	float inv_mass;
+		// };
 
-		std::vector<Node> nodes;
-		std::vector<std::vector<float>> distances;
+		// std::vector<Node> nodes;
+		// std::vector<std::vector<float>> distances;
 		float steer_angle = 0;
 		float odometer = 0;
-		std::vector<Node*> wheels;
+		std::vector<physics::pbd::Node*> wheels;
 
-		Car(const vec<3>& pos);
+		Car(const vec<3>& pos, float mass=1000);
 		Car(const Car& o);
 		void step(State& state, float dt);
 		vec<3> position();

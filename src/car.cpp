@@ -2,7 +2,7 @@
 
 using namespace ld54;
 
-State::Car::Car(const vec<3>& pos)
+State::Car::Car(const vec<3>& pos, float mass)
 {
 	vec<3> wheel_pattern[] = {
 		{1.1f, 0, 1.5f},
@@ -14,14 +14,15 @@ State::Car::Car(const vec<3>& pos)
 	for (unsigned i = 0; i < 4; i++)
 	{
 		float t = M_PI/4 + (M_PI / 2) * i;
-		Node n = {
+		physics::pbd::Node n = {
 			pos + wheel_pattern[i],
 			{},
+			1.f / 100.f
 		};
 
 		nodes.push_back(n);
 
-		Node* node = &nodes.back();
+		physics::pbd::Node* node = &nodes.back();
 		wheels.push_back(node);
 	}
 
@@ -32,7 +33,7 @@ State::Car::Car(const vec<3>& pos)
 
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
-		distances.push_back(std::vector<float>());
+		// distances.push_back(std::vector<float>());
 
 		for (unsigned j = 0; j < nodes.size(); j++)
 		{
@@ -40,18 +41,36 @@ State::Car::Car(const vec<3>& pos)
 			if (i != j)
 			{
 				auto d = nodes[i].pos - nodes[j].pos;
-				dist = d.magnitude();			
+				dist = d.magnitude();
+
+				float stiffness = 1.f;
+
+				if (i < 4 || j < 4)
+				{
+					stiffness = 0.5f;
+				}
+				
+				constraints.push_back({
+					dist, // distance
+					stiffness, // stiffness
+					{
+						{ i, this },
+						{ j, this },
+					}
+				});
 			}
 
-			distances[i].push_back(dist);
+			// distances[i].push_back(dist);
 		}
+
+		nodes[i].inv_mass = 1.0f / (mass / (float)nodes.size());
 	}
 }
 
 State::Car::Car(const Car& o)
 {
 	nodes = o.nodes;
-	distances = o.distances;
+	constraints = o.constraints;
 	
 	for (unsigned i = 0; i < 4; i++)
 	{
@@ -63,7 +82,7 @@ void State::Car::step(State& state, float dt)
 {
 	const auto gravity = vec<3>{0, -9.81f, 0};
 
-	auto sub_steps = 100;
+	auto sub_steps = 10;
 	auto sub_dt = dt / sub_steps;
 
 	auto steer_vec = steer_forward();
@@ -94,6 +113,7 @@ void State::Car::step(State& state, float dt)
 
 	odometer += fwd.dot(velocity()) * 2.5 * dt;
 
+	// Apply external forces
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
 		auto& node = nodes[i];
@@ -111,6 +131,13 @@ void State::Car::step(State& state, float dt)
 		}
 	}
 
+/*
+	// generate estimated positions for each vertex
+	for (unsigned i = 0; i < nodes.size(); i++)
+	{
+		nodes[i].est_pos = nodes[i].pos + nodes[i].vel * dt;
+	}
+
 	// apply constraint solving between wheels in sub steps
 	for (unsigned step = 0; step < sub_steps; step++)
 	{
@@ -120,24 +147,43 @@ void State::Car::step(State& state, float dt)
 			{
 				if (i == j) continue;
 
-				auto d = nodes[j].pos - nodes[i].pos;
+				auto d = nodes[i].est_pos - nodes[j].est_pos;
 				auto dist = d.magnitude();
 				auto dir = d.unit();
 
-				auto force = (dist - distances[i][j]);
+				float w[2] = {
+					nodes[i].inv_mass,
+					nodes[j].inv_mass,
+				};
+				float w0_w1 = w[0] + w[1];
 
-				nodes[i].vel += dir * force * 0.9f;
+				// auto force = (dist - distances[i][j]);
+				vec<3> dp[2] = {
+					dir * (w[0] / w0_w1) * -(dist - distances[i][j]),
+					// dir * (w[1] / w0_w1) * (dist - distances[i][j]),
+				};
+
+				nodes[i].est_pos += dp[0];
+				// nodes[j].est_pos += dp[1];
+
+				// nodes[i].vel += dir * force * 0.9f;
 				// nodes[i].pos += dir * force * 0.5f * sub_dt;
 			}
 
 		}
-
-		for (unsigned i = 0; i < nodes.size(); i++)
-		{
-			nodes[i].pos += nodes[i].vel * sub_dt;
-		}
 	}
 
+	// correct velocities and positions
+	for (unsigned i = 0; i < nodes.size(); i++)
+	{
+		auto dp = nodes[i].est_pos - nodes[i].pos;
+		nodes[i].vel = dp / dt;
+		nodes[i].pos = nodes[i].est_pos;
+		// nodes[i].pos += nodes[i].vel * sub_dt;
+	}
+	*/
+	physics::pbd::Solver::instance().add_meshes({this});
+	physics::pbd::Solver::instance().step(dt);
 }
 
 vec<3> State::Car::position()
