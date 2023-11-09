@@ -2,6 +2,7 @@
 
 #include <g.gfx.h>
 #include <algorithm>
+#include <optional>
 
 #include "physics.hpp"
 
@@ -33,21 +34,25 @@ struct State
 		Car(const vec<3>& pos, float mass=1000);
 		Car(const Car& o);
 		void step(State& state, float dt);
-		vec<3> position();
+		void nudge(const vec<3>& delta);
+		vec<3> position(std::optional<vec<3>> pos=std::nullopt);
+		void rotate(const quat<>& Q);
 		vec<3> steer_forward();
 		vec<3> forward();
 		vec<3> right();
 		vec<3> up();
-		vec<3> velocity();
+		vec<3> velocity(std::optional<vec<3>> vel=std::nullopt);
 		mat<4, 4> orientation();
 		void accelerate(float amount);
 		void steer(float amount);
+		void flip();
 	};
 
-	struct {
+	struct World : public g::dyn::cd::collider
+	{
 		g::gfx::texture heightmap;
 		
-		float height(vec<3> p, bool pixel=false)
+		float height(vec<3> p, bool pixel=false, vec<3>* normal_out = nullptr) const
 		{
 			if (!pixel)
 			{
@@ -60,10 +65,18 @@ struct State
 			auto x_1 = std::max(0, std::min((int)heightmap.size[0]-1, (int)p[0]+1));
 			auto y_1 = std::max(0, std::min((int)heightmap.size[1]-1, (int)p[2]+1));
 
-			auto h_00 = heightmap.sample(x_0, y_0)[0];
-			auto h_01 = heightmap.sample(x_0, y_1)[0];
-			auto h_10 = heightmap.sample(x_1, y_0)[0];
-			auto h_11 = heightmap.sample(x_1, y_1)[0];
+			auto h_00 = (float)heightmap.sample(x_0, y_0)[0];
+			auto h_01 = (float)heightmap.sample(x_0, y_1)[0];
+			auto h_10 = (float)heightmap.sample(x_1, y_0)[0];
+			auto h_11 = (float)heightmap.sample(x_1, y_1)[0];
+
+			if (normal_out)
+			{
+				*normal_out = vec<3>::cross(
+					vec<3>{(float)x_1, (float)y_0, h_10} - vec<3>{(float)x_0, (float)y_0, h_00},
+					vec<3>{(float)x_0, (float)y_1, h_01} - vec<3>{(float)x_0, (float)y_0, h_00}
+				).unit();
+			}
 
 			auto dx = p[0] - (int)p[0];
 			auto dy = p[2] - (int)p[2];
@@ -75,8 +88,45 @@ struct State
 			return h * 0.125f;
 		}
 
+		bool generates_rays() override { return false; }
+		std::vector<ray>& rays() override
+		{
+			static std::vector<ray> rays;
+			return rays; 
+		}
+		intersection ray_intersects(const ray& r) const override
+		{
+			auto& p0 = r.position;
+			auto p1 = r.position + r.direction;
+			auto h0 = height(p0);
+			auto h1 = height(p1);
+			
+			if ((p0[1] - h0) < 0 || (p1[1] - h1) < 0)
+			{
+				auto dy = r.direction[1];
+				auto t = (p0[1] - h0) / dy;
+				auto intersect = r.position + r.direction * t;
+				vec<3> normal;
+				height(intersect, false, &normal);
+				return {
+					t,
+					r.position,
+					r.direction,
+					intersect,
+					normal
+				};
+			}
+			else
+			{
+				return {};
+			}
+		}
+
+
 		std::vector<Car> cars;
-	} world;
+	};
+
+	World world;
 
 	struct {
 		g::game::fps_camera camera;

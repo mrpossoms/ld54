@@ -95,6 +95,11 @@ void controls(State& state, float dt)
 	{
 		car.steer(-car.steer_angle * 3.f * dt);
 	}
+
+	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		car.flip();
+	}
 }
 
 } // namespace ld54

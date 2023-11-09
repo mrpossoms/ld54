@@ -29,10 +29,18 @@ struct Constraint
 	} v[2];
 };
 
-struct Mesh
+struct Mesh : public g::dyn::cd::collider
 {
 	std::vector<Node> nodes;
 	std::vector<Constraint> constraints;
+
+    intersection ray_intersects(const ray& r) const override;
+    bool generates_rays() override { return true; }
+    std::vector<ray>& rays() override;
+
+private:
+	std::vector<ray> m_rays;
+	std::vector<intersection> m_intersections;
 };
 
 struct Solver
@@ -41,7 +49,10 @@ struct Solver
 
 	void add_meshes(const std::initializer_list<Mesh*>& meshes);
 	void add_constraints(const std::initializer_list<Constraint>& constraint);
-	void step(float dt, std::function<vec<3> (const vec<3>& p)> force_field=nullptr);
+	void step(
+		float dt, 
+		g::dyn::cd::collider& collider,
+		std::function<vec<3> (const vec<3>& p)> force_field=nullptr);
 
 	static Solver& instance();
 

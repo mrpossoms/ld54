@@ -97,7 +97,7 @@ void Renderer::draw(State& state)
 	terrain.using_shader(assets.shader("planet.vs+terrain.fs") )
 	.set_camera(state.player.camera)
 	["u_model"].mat4(mat<4,4>::translation({0, 0, 0}))
-	.draw<GL_TRIANGLES>();
+	.draw<GL_LINES>();
 
 	for (State::Car& car : state.world.cars)
 	{

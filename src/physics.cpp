@@ -3,6 +3,24 @@
 
 using namespace ld54;
 using namespace physics::pbd;
+using namespace g::dyn::cd;
+
+
+intersection physics::pbd::Mesh::ray_intersects(const ray& r) const
+{
+	// TODO
+	return {};
+}
+
+std::vector<ray>& physics::pbd::Mesh::rays()
+{
+	m_rays.clear();
+	for (auto& node : nodes)
+	{
+		m_rays.push_back({node.pos, node.vel});
+	}
+	return m_rays;
+}
 
 physics::pbd::Solver::Solver(unsigned solver_steps)
 {
@@ -58,9 +76,13 @@ static inline void project_constraint(const Constraint& c, const Node* n0, const
 	est_p1 += dp[1] * k_prime;
 }
 
-void physics::pbd::Solver::step(float dt, std::function<vec<3> (const vec<3>& p)> force_field)
+void physics::pbd::Solver::step(
+	float dt, 
+	g::dyn::cd::collider& collider,
+	std::function<vec<3> (const vec<3>& p)> force_field)
 {
 	m_est_pos.clear();
+	m_node_ptrs.clear();
 
 	// generate estimated positions for each mesh
 	for (auto mesh : m_meshes)
@@ -76,6 +98,45 @@ void physics::pbd::Solver::step(float dt, std::function<vec<3> (const vec<3>& p)
 			m_node_ptrs.push_back(&node);
 		}
 	}
+
+	// generate collision contraints
+	m_transient_constraints.clear();
+	for (unsigned mi = 0; mi < m_meshes.size(); mi++)
+	{
+		auto& mesh = m_meshes[mi];
+		auto& start_index = m_mesh_start_index[mi];
+
+		for (unsigned i = 0; i < mesh->nodes.size(); i++)
+		{
+			auto& node = mesh->nodes[i];
+
+			g::dyn::cd::ray r = {node.pos, node.vel * dt};
+
+			auto intersect = collider.ray_intersects(r);
+			if (intersect)
+			{
+				static Node static_node = {
+					{},
+					{},
+					std::numeric_limits<float>::epsilon(),
+				};
+
+				m_est_pos.push_back(intersect.point);
+				m_node_ptrs.push_back(&static_node);
+
+				m_transient_constraints.push_back({
+					0,
+					1.f,
+					{
+						{i + start_index, mesh}, 
+						{m_est_pos.size()-1, nullptr}
+					}
+				});
+			}
+		}
+	}
+
+
 
 	// Solve constraint for all meshes
 	for (unsigned step = 0; step < m_solver_steps; step++)

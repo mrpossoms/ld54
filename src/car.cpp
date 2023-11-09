@@ -138,15 +138,15 @@ void State::Car::step(State& state, float dt)
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
 		auto& node = nodes[i];
-		auto z = state.world.height(node.pos);
-		auto dz = z - node.pos[1];
-		if (dz > 0)
-		{
-			node.pos[1] = z;
-			node.vel[1] = 0;
-			// node.vel += vec<3>{0, dz, 0} * dt;
-		}
-		else
+		// auto z = state.world.height(node.pos);
+		// auto dz = z - node.pos[1];
+		// if (dz > 0)
+		// {
+		// 	node.pos[1] = z;
+		// 	node.vel[1] = 0;
+		// 	// node.vel += vec<3>{0, dz, 0} * dt;
+		// }
+		// else
 		{
 			node.vel += gravity * dt;
 		}
@@ -204,11 +204,27 @@ void State::Car::step(State& state, float dt)
 	}
 	*/
 	physics::pbd::Solver::instance().add_meshes({this});
-	physics::pbd::Solver::instance().step(dt);
+	physics::pbd::Solver::instance().step(dt, state.world);
 }
 
-vec<3> State::Car::position()
+void State::Car::nudge(const vec<3>& delta)
 {
+	for (unsigned i = 0; i < nodes.size(); i++)
+	{
+		nodes[i].pos += delta;
+	}
+}
+
+vec<3> State::Car::position(std::optional<vec<3>> pos)
+{
+	if (pos)
+	{
+		auto delta = *pos - position();
+		nudge(delta);
+
+		return *pos;
+	}
+
 	vec<3> net_pos;
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
@@ -216,6 +232,15 @@ vec<3> State::Car::position()
 	}
 
 	return net_pos / (float)nodes.size();
+}
+
+void State::Car::rotate(const quat<>& Q)
+{
+	auto delta = position();
+	for (unsigned i = 0; i < nodes.size(); i++)
+	{
+		nodes[i].pos = (Q.rotate(nodes[i].pos - delta)) + delta;
+	}
 }
 
 vec<3> State::Car::steer_forward()
@@ -238,8 +263,18 @@ vec<3> State::Car::up()
 	return vec<3>::cross(forward(), right());
 }
 
-vec<3> State::Car::velocity()
+vec<3> State::Car::velocity(std::optional<vec<3>> vel)
 {
+	if (vel)
+	{
+		for (unsigned i = 0; i < nodes.size(); i++)
+		{
+			nodes[i].vel = *vel;
+		}
+
+		return *vel;
+	}
+
 	vec<3> net_vel;
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
@@ -280,4 +315,17 @@ void State::Car::steer(float amount)
 	steer_angle += amount;
 
 	steer_angle = std::max<float>(-M_PI/4.f, std::min<float>(M_PI/4.f, steer_angle));
+}
+
+void State::Car::flip()
+{
+	auto tilt = up().angle_to(vec<3>{0, 1, 0});
+
+	if (tilt > M_PI / 4)
+	{
+		auto Q = quat<>::from_axis_angle(forward(), -tilt);
+		rotate(Q);
+		nudge(vec<3>{0, 4, 0});
+		velocity(vec<3>{0, 0, 0});
+	}
 }
