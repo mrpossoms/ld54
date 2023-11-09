@@ -1,6 +1,7 @@
 #include "state.hpp"
 
 using namespace ld54;
+using namespace ld54::physics::pbd;
 
 static unsigned pair_id(unsigned i, unsigned j)
 {
@@ -69,12 +70,13 @@ State::Car::Car(const vec<3>& pos, float mass)
 					stiffness = 0.2f;
 				}
 				
-				constraints.push_back({
-					dist,
-					stiffness,
-					{
-						{ i, this },
-						{ j, this },
+				constraints.push_back(Constraint{
+					.type = Constraint::Type::Equality,
+					.stiffness = stiffness,
+					.params = { .equality = { dist } },
+					.v {
+						{ .idx = i, .parent = this },
+						{ .idx = j, .parent = this },
 					}
 				});
 

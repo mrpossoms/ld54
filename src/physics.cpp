@@ -65,9 +65,21 @@ static inline void project_constraint(const Constraint& c, const Node* n0, const
 	};
 	float w0_w1 = w[0] + w[1];
 
+	// Compute constraint scalars depending on constraint type
+	float C;
+	switch (c.type)
+	{
+		case Constraint::Type::Equality:
+			C = dist - c.params.equality.distance;
+			break;
+		case Constraint::Type::Inequality:
+			C = -d.dot(c.params.inequality.normal);
+			break;
+	}
+
 	vec<3> dp[2] = {
-		dir * (w[0] / w0_w1) * -(dist - c.distance),
-		dir * (w[1] / w0_w1) * (dist - c.distance),
+		dir * (w[0] / w0_w1) * -C,
+		dir * (w[1] / w0_w1) * C,
 	};
 
 	auto k_prime = 1.f - powf((1.f - c.stiffness), 1 / (float)iterations);
@@ -115,22 +127,23 @@ void physics::pbd::Solver::step(
 			auto intersect = collider.ray_intersects(r);
 			if (intersect)
 			{
-				// intersect = collider.ray_intersects(r);
+				auto& n = intersect.normal;
 				static Node static_node = {
 					{},
 					{},
 					std::numeric_limits<float>::epsilon(),
 				};
 
-				m_est_pos.push_back(intersect.point + vec<3>{0, 0.1f, 0});
+				m_est_pos.push_back(intersect.point + vec<3>{0, 0.0, 0});
 				m_node_ptrs.push_back(&static_node);
 
-				m_transient_constraints.push_back({
-					0.0f,
-					1.f,
-					{
-						{i + start_index, mesh}, 
-						{(unsigned)m_est_pos.size()-1, nullptr}
+				m_transient_constraints.push_back(Constraint{
+					.type = Constraint::Type::Inequality,
+					.stiffness = 1.f,
+					.params = { .inequality = { n[0], n[1], n[2] } },
+					.v {
+						{ .idx = i + start_index, .parent = mesh },
+						{ .idx = (unsigned)m_est_pos.size()-1, .parent = nullptr },
 					}
 				});
 			}

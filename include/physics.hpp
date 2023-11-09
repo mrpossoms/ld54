@@ -20,10 +20,31 @@ struct Mesh;
 
 struct Constraint
 {
-	float distance;
-	float stiffness;
+	enum Type
+	{
+		Equality,
+		Inequality
+	};
 
-	bool inequality = false;
+	struct EqualityParams
+	{
+		float distance;
+	};
+
+	struct InequalityParams
+	{
+		float normal[3];
+	};
+
+	union Params
+	{
+		EqualityParams equality;
+		InequalityParams inequality;
+	};
+
+	Type type;
+	float stiffness;
+	Params params;
 
 	struct {
 		unsigned idx;

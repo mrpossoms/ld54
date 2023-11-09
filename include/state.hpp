@@ -73,8 +73,8 @@ struct State
 			if (normal_out)
 			{
 				*normal_out = vec<3>::cross(
-					vec<3>{(float)x_1, (float)y_0, h_10} - vec<3>{(float)x_0, (float)y_0, h_00},
-					vec<3>{(float)x_0, (float)y_1, h_01} - vec<3>{(float)x_0, (float)y_0, h_00}
+					vec<3>{(float)x_0, h_01, (float)y_1} - vec<3>{(float)x_0, h_00, (float)y_0},
+					vec<3>{(float)x_1, h_10, (float)y_0} - vec<3>{(float)x_0, h_00, (float)y_0}
 				).unit();
 			}
 
