@@ -115,21 +115,22 @@ void physics::pbd::Solver::step(
 			auto intersect = collider.ray_intersects(r);
 			if (intersect)
 			{
+				// intersect = collider.ray_intersects(r);
 				static Node static_node = {
 					{},
 					{},
 					std::numeric_limits<float>::epsilon(),
 				};
 
-				m_est_pos.push_back(intersect.point);
+				m_est_pos.push_back(intersect.point + vec<3>{0, 0.1f, 0});
 				m_node_ptrs.push_back(&static_node);
 
 				m_transient_constraints.push_back({
-					0,
+					0.0f,
 					1.f,
 					{
 						{i + start_index, mesh}, 
-						{m_est_pos.size()-1, nullptr}
+						{(unsigned)m_est_pos.size()-1, nullptr}
 					}
 				});
 			}

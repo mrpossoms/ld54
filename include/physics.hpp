@@ -23,6 +23,8 @@ struct Constraint
 	float distance;
 	float stiffness;
 
+	bool inequality = false;
+
 	struct {
 		unsigned idx;
 		Mesh* parent;

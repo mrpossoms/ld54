@@ -104,7 +104,7 @@ struct State
 			if ((p0[1] - h0) < 0 || (p1[1] - h1) < 0)
 			{
 				auto dy = r.direction[1];
-				auto t = (p0[1] - h0) / dy;
+				auto t = (h0 - p0[1]) / dy;
 				auto intersect = r.position + r.direction * t;
 				vec<3> normal;
 				height(intersect, false, &normal);
