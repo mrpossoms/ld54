@@ -101,3 +101,7 @@ add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
                    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
                   )
 endif ()
+
+# testing
+enable_testing()
+add_subdirectory(tests)
