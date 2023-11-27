@@ -46,13 +46,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_SILENCE_DEPRECATION")
 
 add_subdirectory(gitman_sources/g.h)
 
-INCLUDE_DIRECTORIES(
-${BULLET_PHYSICS_SOURCE_DIR}/src
-)
-
 # add all source files
 set(SOURCE ${SOURCE} 
-  src/main.cpp
   src/renderer.cpp
   src/car.cpp
   src/physics.cpp
@@ -70,11 +65,18 @@ endif()
 
 # find_package(OpenAL REQUIRED)
 
-add_executable(${PROJECT_NAME} ${SOURCE})
+add_library(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} g)
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
+message(">>>openal: ${OPENAL_LIBRARY}")
+
+add_executable(oregon-trail src/main.cpp)
+target_link_libraries(oregon-trail ${PROJECT_NAME})
+target_link_libraries(oregon-trail g)
+target_link_libraries(oregon-trail glfw)
+target_link_libraries(oregon-trail ${OPENAL_LIBRARY})
 message(">>>openal: ${OPENAL_LIBRARY}")
 
 if (WIN32)

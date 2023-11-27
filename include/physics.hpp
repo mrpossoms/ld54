@@ -79,6 +79,8 @@ struct Solver
 
 	static Solver& instance();
 
+	const std::vector<Constraint>& get_transient_constraints() { return m_transient_constraints; }
+
 private:
 	unsigned m_solver_steps;
 	std::vector<vec<3>> m_est_pos;

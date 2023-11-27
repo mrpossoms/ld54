@@ -12,12 +12,6 @@ sources:
     sparse_paths:
       -
     rev: main
-  - name: bullet3
-    type: git
-    repo: https://github.com/bulletphysics/bullet3.git
-    sparse_paths:
-      -
-    rev: 3.25
 sources_locked:
   - 
 default_group: native
@@ -25,7 +19,6 @@ groups:
   - name: native
     members:
       - g.h
-      - bullet3
   - name: web
     members:
       - g.h
