@@ -56,14 +56,17 @@ struct State
 		{
 			if (!pixel)
 			{
-				p += vec<3>{heightmap.size[0] * 0.5f, 0, heightmap.size[1] * 0.5f};
+				// p += vec<3>{heightmap.size[0] * 0.5f, 0, heightmap.size[1] * 0.5f};
 			}
 
-			auto x_0 = std::max(0, std::min((int)heightmap.size[0]-1, (int)p[0]));
-			auto y_0 = std::max(0, std::min((int)heightmap.size[1]-1, (int)p[2]));
+			const int max_x = heightmap.size[0]-1;
+			const int max_y = heightmap.size[1]-1;
 
-			auto x_1 = std::max(0, std::min((int)heightmap.size[0]-1, (int)p[0]+1));
-			auto y_1 = std::max(0, std::min((int)heightmap.size[1]-1, (int)p[2]+1));
+			auto x_0 = std::clamp((int)p[0], 0, max_x); //std::max(0, std::min(max_x, (int)p[0]));
+			auto y_0 = std::clamp((int)p[2], 0, max_y);
+
+			auto x_1 = std::clamp((int)p[0]+1, 0, max_x);
+			auto y_1 = std::clamp((int)p[2]+1, 0, max_y);
 
 			auto h_00 = (float)heightmap.sample(x_0, y_0)[0];
 			auto h_01 = (float)heightmap.sample(x_0, y_1)[0];
@@ -72,10 +75,13 @@ struct State
 
 			if (normal_out)
 			{
-				*normal_out = vec<3>::cross(
-					vec<3>{(float)x_0, h_01, (float)y_1} - vec<3>{(float)x_0, h_00, (float)y_0},
-					vec<3>{(float)x_1, h_10, (float)y_0} - vec<3>{(float)x_0, h_00, (float)y_0}
-				).unit();
+				auto O = vec<3>{(float)x_0, h_00, (float)y_0};
+				vec<3> basis[] = {
+					vec<3>{(float)x_0, h_01, (float)y_1} - O,
+					vec<3>{(float)x_1, h_10, (float)y_0} - O					
+				};
+
+				*normal_out = vec<3>::cross(basis[0], basis[1]).unit();
 			}
 
 			auto dx = p[0] - (int)p[0];

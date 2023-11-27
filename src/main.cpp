@@ -36,6 +36,8 @@ struct Game : public g::core
 
 	virtual void update(float dt)
 	{
+		if (dt > 1) return;
+
 		controls(state, dt);
 
 		auto& car = state.world.cars[0];
