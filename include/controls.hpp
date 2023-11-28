@@ -85,11 +85,11 @@ void controls(State& state, float dt)
 
 	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
-		car.steer(3.f * dt);
+		car.steer(6.f * dt);
 	}
 	else if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
-		car.steer(-3.f * dt);
+		car.steer(-6.f * dt);
 	}
 	else
 	{

@@ -25,7 +25,8 @@ void test_normal_x()
 		for (unsigned y = 1; y < 7; y++)
 		{
 			vec<3> normal;
-			assert(fabs(world.height({(float)x, 0, (float)y}, false, &normal) - x * 0.125f) < 0.0001);
+			auto height = world.height({(float)x, 0, (float)y}, true, &normal);
+			assert(fabs(height - x * 0.125f) < 0.0001);
 			assert(normal.is_near(exp_normal));
 		}
 	}
@@ -55,7 +56,7 @@ void test_normal_y()
 		for (unsigned y = 1; y < 7; y++)
 		{
 			vec<3> normal;
-			assert(fabs(world.height({(float)x, 0, (float)y}, false, &normal) - y * 0.125f) < 0.0001);
+			assert(fabs(world.height({(float)x, 0, (float)y}, true, &normal) - y * 0.125f) < 0.0001);
 			assert(normal.is_near(exp_normal));
 		}
 	}

@@ -40,6 +40,11 @@ struct Game : public g::core
 
 		controls(state, dt);
 
+		if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_SPACE) == GLFW_PRESS)
+		{
+			dt = 0.0001f;
+		}
+
 		auto& car = state.world.cars[0];
 		auto& cam = state.player.camera;
 		auto cam_pos_targ = car.position() + car.forward() * -10 + car.up() * 4;

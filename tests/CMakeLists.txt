@@ -1,6 +1,7 @@
 set(Tests 
 	dummy.cpp
 	world_normal.cpp
+	pair_id.cpp
 	# mmap_buffer.cpp
 	# fs_chunk.cpp
 	# utm_coordinates.cpp

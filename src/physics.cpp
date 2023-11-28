@@ -30,6 +30,8 @@ physics::pbd::Solver::Solver(unsigned solver_steps)
 void physics::pbd::Solver::add_meshes(const std::initializer_list<Mesh*>& meshes)
 {
 	m_meshes.clear();
+	m_mesh_start_index.clear();
+
 	unsigned node_count = 0;
 	for (auto mesh : meshes)
 	{
@@ -55,7 +57,7 @@ void physics::pbd::Solver::add_constraints(const std::initializer_list<Constrain
 
 static inline void project_constraint(const Constraint& c, const Node* n0, const Node* n1, vec<3>& est_p0, vec<3>& est_p1, unsigned iterations)
 {
-	auto d = est_p0 - est_p1;
+	auto d = est_p1 - est_p0;
 	auto dist = d.magnitude();
 	auto dir = d.unit();
 
@@ -65,6 +67,8 @@ static inline void project_constraint(const Constraint& c, const Node* n0, const
 	};
 	float w0_w1 = w[0] + w[1];
 
+	assert(c.v[0].parent != nullptr);
+
 	// Compute constraint scalars depending on constraint type
 	float C;
 	switch (c.type)
@@ -73,19 +77,25 @@ static inline void project_constraint(const Constraint& c, const Node* n0, const
 			C = dist - c.params.equality.distance;
 			break;
 		case Constraint::Type::Inequality:
-			C = -d.dot(c.params.inequality.normal);
+			C = d.dot(c.params.inequality.normal);
+			C *= C > 0; // Only apply constraint if C > 0
 			break;
 	}
 
 	vec<3> dp[2] = {
-		dir * (w[0] / w0_w1) * -C,
-		dir * (w[1] / w0_w1) * C,
+		dir * (w[0] / w0_w1) * C,
+		dir * (w[1] / w0_w1) * -C,
 	};
+
+	if (dp[0].magnitude() > 1 || dp[1].magnitude() > 1)
+	{
+		return;
+	} 
 
 	auto k_prime = 1.f - powf((1.f - c.stiffness), 1 / (float)iterations);
 
-	est_p0 += dp[0] * k_prime;
-	est_p1 += dp[1] * k_prime;
+	est_p0 += dp[0] * k_prime * (float)(c.v[0].parent != nullptr);
+	est_p1 += dp[1] * k_prime * (float)(c.v[1].parent != nullptr);
 }
 
 void physics::pbd::Solver::step(
@@ -93,6 +103,13 @@ void physics::pbd::Solver::step(
 	g::dyn::cd::collider& collider,
 	std::function<vec<3> (const vec<3>& p)> force_field)
 {
+	static bool freeze = false;
+
+	if (freeze)
+	{
+		// return;
+	}
+
 	m_est_pos.clear();
 	m_node_ptrs.clear();
 
@@ -105,6 +122,7 @@ void physics::pbd::Solver::step(
 
 			if (force_field)
 			node.vel += force_field(node.pos) * node.inv_mass * dt;
+			// node.vel *= 0.99f;
 
 			m_est_pos.push_back(node.pos + node.vel * dt);
 			m_node_ptrs.push_back(&node);
@@ -128,6 +146,9 @@ void physics::pbd::Solver::step(
 			if (intersect)
 			{
 				auto& n = intersect.normal;
+
+				assert(n.dot({0, 1, 0}) > 0);
+
 				static Node static_node = {
 					{},
 					{},
@@ -150,11 +171,24 @@ void physics::pbd::Solver::step(
 		}
 	}
 
-
-
 	// Solve constraint for all meshes
 	for (unsigned step = 0; step < m_solver_steps; step++)
 	{
+		// Solve transient constraints (constraints between meshes / environment)
+		for (auto& c : m_transient_constraints)
+		{
+			freeze = true;
+
+			project_constraint(
+				c, 
+				m_node_ptrs[c.v[0].idx], 
+				m_node_ptrs[c.v[1].idx], 
+				m_est_pos[c.v[0].idx], 
+				m_est_pos[c.v[1].idx],
+				m_solver_steps
+			);
+		}
+
 		// Solve constraints belonging to each mesh
 		for (unsigned mi = 0; mi < m_meshes.size(); mi++)
 		{
@@ -173,19 +207,6 @@ void physics::pbd::Solver::step(
 					m_solver_steps
 				);
 			}
-		}
-
-		// Solve transient constraints (constraints between meshes / environment)
-		for (auto& c : m_transient_constraints)
-		{
-			project_constraint(
-				c, 
-				m_node_ptrs[c.v[0].idx], 
-				m_node_ptrs[c.v[1].idx], 
-				m_est_pos[c.v[0].idx], 
-				m_est_pos[c.v[1].idx],
-				m_solver_steps
-			);
 		}
 	}
 
@@ -206,6 +227,12 @@ void physics::pbd::Solver::step(
 
 Solver& physics::pbd::Solver::instance()
 {
-	static Solver s;
-	return s;
+	static std::unique_ptr<Solver> s;
+
+	if (!s)
+	{
+		s = std::make_unique<Solver>(10);
+	}
+
+	return *s;
 }

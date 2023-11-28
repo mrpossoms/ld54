@@ -3,7 +3,7 @@
 using namespace ld54;
 using namespace ld54::physics::pbd;
 
-static unsigned pair_id(unsigned i, unsigned j)
+unsigned State::Car::pair_id(unsigned i, unsigned j)
 {
 	if (i < j)
 	{
@@ -122,7 +122,7 @@ void State::Car::step(State& state, float dt)
 		
 		// skid friction
 		auto skid = wheel.vel.dot(right());
-		wheel.vel -= right() * skid * 4.0f * dt;
+		wheel.vel -= right() * skid * 2.0f * dt;
 
 		// rolling resistance
 		auto rolling = wheel.vel.dot(fwd);

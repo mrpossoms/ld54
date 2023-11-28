@@ -52,6 +52,7 @@ struct Constraint
 	} v[2];
 };
 
+
 struct Mesh : public g::dyn::cd::collider
 {
 	std::vector<Node> nodes;
