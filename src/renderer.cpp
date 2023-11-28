@@ -63,14 +63,6 @@ void Renderer::draw(State& state)
 
 	if (!terrain.is_initialized())
 	{
-		// float heightScaling = (14. / 256.);
-		terrain_height_min = tex_min(state.world.heightmap); // * heightScaling;
-		terrain_height_max = tex_max(state.world.heightmap); // * heightScaling;
-		auto hm_zero = (terrain_height_max + terrain_height_min) * 0.5f;
-
-		float debug_max = -10000;
-		float debug_min = 10000;
-
 		auto terrain_min = vec<3>{0, 0, 0};
 		auto terrain_max = vec<3>{(float)state.world.heightmap.size[0], 0, (float)state.world.heightmap.size[1]};
 		auto terrain_center = (terrain_min + terrain_max) * 0.5f;
@@ -78,26 +70,60 @@ void Renderer::draw(State& state)
 		terrain = mesh_factory::from_heightmap<vertex::pos_norm_tan>(state.world.heightmap,
 			[&](const texture& tex, int x, int y) -> vertex::pos_norm_tan {
 				auto height = state.world.height({(float)x, 0, (float)y}, true);
-				debug_max = std::max(debug_max, height);
-				debug_min = std::min(debug_min, height);
+	
+				vec<3> normal;
+				state.world.height(vec<3>{ (float)x, (float)height, (float)y}, true, &normal);
 				return {
 					// position
 					vec<3>{ (float)x, (float)height, (float)y} - terrain_center,
 					// normal
-					normal_from_heightmap(state.world.heightmap, {x, y}),
+					// normal_from_heightmap(state.world.heightmap, {x, y}),
+					normal,
 					// tangent
 					{ 1, 0, 0 },
 				};
 			}
 		);
-
-		std::cout << "heightmap extreams: " << debug_min << ", " << debug_max << std::endl;
 	}
 
 	terrain.using_shader(assets.shader("planet.vs+terrain.fs") )
 	.set_camera(state.player.camera)
 	["u_model"].mat4(mat<4,4>::translation({0, 0, 0}))
+	["u_color_base"].vec4({0, 0, 0, 0.5f})
 	.draw<GL_LINES>();
+
+	glPointSize(2);
+	terrain.using_shader(assets.shader("planet.vs+terrain.fs") )
+	.set_camera(state.player.camera)
+	["u_model"].mat4(mat<4,4>::translation({0, 0, 0}))
+	["u_color_base"].vec4({0, 0, 1, 1})
+	.draw<GL_POINTS>();
+	terrain.using_shader(assets.shader("planet.vs+terrain.fs") )
+	.set_camera(state.player.camera)
+	["u_model"].mat4(mat<4,4>::translation({0, 0, 0}))
+	["u_color_base"].vec4({1, 1, 1, 1})
+	.draw<GL_TRIANGLES>();
+	
+	//if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	if (glfwGetMouseButton(g::gfx::GLFW_WIN, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	{
+		auto intr = state.world.ray_intersects({
+			.position = state.player.camera.position,
+			.direction = state.player.camera.forward() * 10000
+		});
+
+		glPointSize(10);
+		g::gfx::debug::print{state.player.camera}.color({1, 0, 1, 1}).point(intr.point);
+
+		glDisable(GL_DEPTH_TEST);
+		if (intr)
+		{
+			g::gfx::debug::print{state.player.camera}.color({1, 0, 0, 1}).ray(intr.point, intr.normal);
+		}
+		glEnable(GL_DEPTH_TEST);
+
+	}
+
 
 	for (State::Car& car : state.world.cars)
 	{

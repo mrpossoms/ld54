@@ -105,9 +105,6 @@ void State::Car::step(State& state, float dt)
 {
 	const auto gravity = vec<3>{0, -9.81f, 0};
 
-	auto sub_steps = 10;
-	auto sub_dt = dt / sub_steps;
-
 	auto steer_vec = steer_forward();
 	auto fwd = forward();
 	bool wheel_near_ground = false;
@@ -140,6 +137,7 @@ void State::Car::step(State& state, float dt)
 	for (unsigned i = 0; i < nodes.size(); i++)
 	{
 		auto& node = nodes[i];
+		
 		// auto z = state.world.height(node.pos);
 		// auto dz = z - node.pos[1];
 		// if (dz > 0)

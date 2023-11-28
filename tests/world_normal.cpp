@@ -4,6 +4,7 @@
 void test_normal_x()
 {
 	ld54::State::World world;
+	world.max_height = 255;
 
 	world.heightmap = g::gfx::texture_factory{8, 8}
 		.components(1)
@@ -26,7 +27,7 @@ void test_normal_x()
 		{
 			vec<3> normal;
 			auto height = world.height({(float)x, 0, (float)y}, true, &normal);
-			assert(fabs(height - x * 0.125f) < 0.0001);
+			assert(fabs(height - x) < 0.0001);
 			assert(normal.is_near(exp_normal));
 		}
 	}
@@ -35,6 +36,7 @@ void test_normal_x()
 void test_normal_y()
 {
 	ld54::State::World world;
+	world.max_height = 255;
 
 	world.heightmap = g::gfx::texture_factory{8, 8}
 		.components(1)
@@ -56,7 +58,7 @@ void test_normal_y()
 		for (unsigned y = 1; y < 7; y++)
 		{
 			vec<3> normal;
-			assert(fabs(world.height({(float)x, 0, (float)y}, true, &normal) - y * 0.125f) < 0.0001);
+			assert(fabs(world.height({(float)x, 0, (float)y}, true, &normal) - y) < 0.0001);
 			assert(normal.is_near(exp_normal));
 		}
 	}
@@ -65,6 +67,7 @@ void test_normal_y()
 void test_intersection()
 {
 	ld54::State::World world;
+	world.max_height = 255;
 
 	world.heightmap = g::gfx::texture_factory{8, 8}
 		.components(1)
@@ -83,13 +86,22 @@ void test_intersection()
 		assert(fabs(inter.time - 0.5f) < 0.0001f);
 	}
 
+	{ // normal, facing away from terrain, no intersect
+		auto inter = world.ray_intersects({
+			{4, 1, 4},
+			{0, 2, 0}
+		});
+
+		assert(!inter);
+	}
+
 	{ // ray is below the terrain and facing deeper, find intersection point above
 		auto inter = world.ray_intersects({
 			{4, -1, 4},
 			{0, -2, 0}
 		});
 
-		assert(fabs(inter.time - -0.5f) < 0.0001f);
+		assert(fabs(inter.time - 3) < 0.0001f);
 	}
 
 	{ // ray is below the terrain and facing deeper, find intersection point above
@@ -98,7 +110,7 @@ void test_intersection()
 			{0, -2, 0}
 		});
 
-		assert(fabs(inter.time - -2.0f) < 0.0001f);
+		assert(fabs(inter.time - 6.0f) < 0.0001f);
 	}
 
 }

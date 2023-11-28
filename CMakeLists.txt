@@ -51,6 +51,7 @@ set(SOURCE ${SOURCE}
   src/renderer.cpp
   src/car.cpp
   src/physics.cpp
+  src/world.cpp
 )
 
 # add game includes

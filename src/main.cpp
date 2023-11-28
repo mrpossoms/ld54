@@ -24,7 +24,8 @@ struct Game : public g::core
 
 	virtual bool initialize()
 	{
-		state.world.heightmap = assets.tex("heightmap.png");
+		state.world.heightmap = assets.tex("heightmap-slope-large.png");
+		state.world.max_height = 200;
 
 		state.player.camera.position[1] = state.world.height(state.player.camera.position) + 1.f;
 
@@ -34,17 +35,8 @@ struct Game : public g::core
 		return true;
 	}
 
-	virtual void update(float dt)
+	void follow_cam(float dt)
 	{
-		if (dt > 1) return;
-
-		controls(state, dt);
-
-		if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_SPACE) == GLFW_PRESS)
-		{
-			dt = 0.0001f;
-		}
-
 		auto& car = state.world.cars[0];
 		auto& cam = state.player.camera;
 		auto cam_pos_targ = car.position() + car.forward() * -10 + car.up() * 4;
@@ -59,6 +51,14 @@ struct Game : public g::core
 		auto cam_up = vec<3>::cross(cam_forward, car.right()).unit();
 		// cam.look_at(cam.position, -cam_forward, cam_up);
 		cam.look_at(car.position());
+	}
+
+	virtual void update(float dt)
+	{
+		if (dt > 1) return;
+
+		controls(state, dt);
+
 		// auto car_pos_proj = car.position().project_onto_plane({0, 1, 0});
 		// auto cam_pos_proj = cam.position.project_onto_plane({0, 1, 0});
 		// cam.orientation = quat<>::from_axis_angle({0, 1, 0}, -car_pos_proj.angle_to(cam_pos_proj));

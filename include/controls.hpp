@@ -62,12 +62,12 @@ void controls(State& state, float dt)
 	}
 
     // process input and update the velocities.
-    // cam.pre_update(dt, 0);
+    cam.pre_update(dt, 0);
     cam.aspect_ratio(g::gfx::aspect());
-    // cam.velocity -= (cam.velocity * dt);
+    cam.velocity -= (cam.velocity * dt);
 
     // after velocities have been corrected, update the camera's position
-    // cam.update(dt, 0);
+    cam.update(dt, 0);
 
 	if (glfwGetKey(g::gfx::GLFW_WIN, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetInputMode(g::gfx::GLFW_WIN, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
